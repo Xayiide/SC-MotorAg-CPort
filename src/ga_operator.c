@@ -12,19 +12,23 @@ static ctrl_inf controller[2][MAX_POP];
 
 static uint8_t same_controller(ctrl_inf *, ctrl_inf *);
 static void    print_controller(ctrl_inf *);
+static void    bubble_sort();
+static void    combine_elite();
+static void    combine_elite_general();
+static void    combine_general();
 
 
 void init_pop() {
     int i, j;
-    ctrl_inf temp_controller;
     bool     exists = false;
+    ctrl_inf temp_controller;
 
     for (i = 0; i < MAX_POP - 1; i++) {
         do {
             temp_controller.kp   = ((float)rand()/(float)RAND_MAX) * 0.01;
             temp_controller.ki   = ((float)rand()/(float)RAND_MAX) * 0.00001;
             temp_controller.kd   = 0.00001;
-            temp_controller.scr  = ((float)rand()/(float)RAND_MAX); /* BAD_SCORE / 2.0; */
+            temp_controller.scr  = BAD_SCORE / 2.0;
             temp_controller.eval = false;
 
             exists = false;
@@ -39,32 +43,66 @@ void init_pop() {
     }
 }
 
+
+void combination() {
+    combine_elite();
+    combine_elite_general();
+    combine_general();
+}
+
+
+void mutation() {
+
+}
+
+
 void run_ga() {
     uint64_t generation = 0;
-    int i;
-    bool changes;
-    //float    score;
-    ctrl_inf temp_controller;
+    float    score;
+    int      i;
 
     init_pop();
 
-    changes = false;
     while (1) {
-        for (i = 0; i < MAX_POP - 1; i++) {
-            if (controller[0][i].scr > controller[0][i+1].scr) {
-                changes = true;
-                temp_controller    = controller[0][i];
-                controller[0][i]   = controller[0][i+1];
-                controller[0][i+1] = temp_controller;
-            }
-        }
-        if (changes == false)
-            break;
-        changes = false;
-    }
+        generation += 1;
+        printf("Generation: %" PRIu64 "\n", generation);
 
-    for (i = MAX_POP -1; i != 0 ; i--) {
-        print_controller(&controller[0][i]);
+        for (i = 0; i < MAX_POP; i++) {
+            if (controller[0][i].eval == false) {
+                score = carry_out_a_simulation(controller[0][i].kp,
+                                               controller[0][i].ki,
+                                               controller[0][i].kd);
+                controller[0][i].scr  = score;
+                controller[0][i].eval = true;
+            }
+
+            printf("%" PRIu64 " ", generation);
+            print_controller(&controller[0][i]);
+        }
+
+        bubble_sort();
+
+
+        if (controller[0][1].scr > 10.0 || generation < 50)
+            break;
+
+        /* prepare new generation in controller[1][x] */
+
+        /* elitism 10% */
+        for (i = 0; i < MAX_POP/10; i++) {
+            controller[1][i] = controller[0][i];
+            /* keep evaluated */
+        }
+
+        /* combination */
+        combination();
+
+        /* mutation */
+        mutation();
+
+        for (i = 0; i < MAX_POP; i++) {
+            controller[0][i] = controller[1][i];
+        }
     }
 
     printf("The best controller is:\n");
@@ -90,6 +128,39 @@ static void print_controller(ctrl_inf *ctrl) {
     printf("| %f | ", ctrl->kp);
     printf("%f | ", ctrl->ki);
     printf("%f | ", ctrl->kd);
-    printf("%f | ", ctrl->scr);
-    printf("%d |\n", ctrl->eval);
+    printf("%f |\n", ctrl->scr);
+}
+
+static void bubble_sort() {
+    int      i;
+    bool     changes;
+    ctrl_inf temp_controller;
+
+    changes = false;
+    while (1) {
+        for (i = 0; i < MAX_POP - 1; i++) {
+            if (controller[0][i].scr > controller[0][i+1].scr) {
+                changes = true;
+                temp_controller    = controller[0][i];
+                controller[0][i]   = controller[0][i+1];
+                controller[0][i+1] = temp_controller;
+            }
+        }
+        if (changes == false)
+            break;
+        changes = false;
+    }
+
+}
+
+static void combine_elite() {
+    return;
+}
+
+static void combine_elite_general() {
+    return;
+}
+
+static void combine_general() {
+    return;
 }
