@@ -6,12 +6,14 @@
 #define MAX_POP 10000
 
 typedef struct controller_inf {
-    float Kp, Ki, Kd;
-    float score;
-    bool  evaluated;
-} controller_inf;
+    float kp, ki, kd;
+    float scr;   /* score     */
+    bool  eval;  /* evaluated */
+} ctrl_inf;
 
-
+void init_pop();
+void combination();
+void mutation();
 
 void run_ga();
 

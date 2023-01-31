@@ -4,15 +4,25 @@ IFLAGS = -Iinc/
 
 .PHONY: clean re
 
-TGT = scag
+TGT = main
 
-SRCS := $(shell find . -name *.c)
-OBJS := $(addsuffix .o,$(basename $(SRCS)))
+SRCS := $(shell find . -type f -name '*.c')
+OBJS := $(SRCS:.c=.o)
+
+all: $(TGT)
+
+debug: all
+
+debug: DEBUG=-DDEBUG
 
 $(TGT): $(OBJS)
+	$(CC) $(CFLAGS) $(DEBUG) $(IFLAGS) $^ -o $@
 
+%.o: %.c
+	$(CC) $(CFLAGS) $(DEBUG) $(IFLAGS) -c $^ -o $@
 
 clean:
+	@rm -f $(TGT) $(OBJS)
+	@echo "clean"
 
-
-re: clean all
+re: clean $(TGT)
