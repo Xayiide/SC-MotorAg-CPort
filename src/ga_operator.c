@@ -83,7 +83,7 @@ void run_ga() {
         bubble_sort();
 
 
-        if (controller[0][1].scr > 10.0 || generation < 50)
+        if (controller[0][1].scr < 10.0 || generation > 50)
             break;
 
         /* prepare new generation in controller[1][x] */
