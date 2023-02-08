@@ -7,6 +7,7 @@
 #include <stdint.h>   /* uint    */
 #include <inttypes.h> /* PRId64  */
 #include <stdbool.h>  /* bool    */
+#include <math.h>     /* floor   */
 
 static ctrl_inf controller[2][MAX_POP];
 
@@ -16,6 +17,7 @@ static void    bubble_sort();
 static void    combine_elite();
 static void    combine_elite_general();
 static void    combine_general();
+static double  randf();
 
 
 void init_pop() {
@@ -126,9 +128,9 @@ static uint8_t same_controller(ctrl_inf *c1, ctrl_inf *c2) {
 
 static void print_controller(ctrl_inf *ctrl) {
     printf("| %f | ", ctrl->kp);
-    printf("%f | ", ctrl->ki);
-    printf("%f | ", ctrl->kd);
-    printf("%f |\n", ctrl->scr);
+    printf("%f | ",   ctrl->ki);
+    printf("%f | ",   ctrl->kd);
+    printf("%f |\n",  ctrl->scr);
 }
 
 static void bubble_sort() {
@@ -154,13 +156,186 @@ static void bubble_sort() {
 }
 
 static void combine_elite() {
-    return;
+    int i, j;
+    int y = 0;
+    int z = 0;
+
+    float    param;
+    ctrl_inf temp_controller;
+    bool     exist;
+
+    for (i = MAX_POP/10 + 1; i < 2*MAX_POP/10; i++) {
+        while (1) {
+            do {
+                y = (int) floor(randf() * (MAX_POP/10));
+            } while (y <= 0);
+
+            do {
+                z = (int) floor(randf() * (MAX_POP/10));
+            } while ((z <= 0) || !(z /= y));
+
+            param = randf();
+            temp_controller = controller[1][i];
+
+            if (param < 0.3333) {
+                temp_controller.kp = controller[0][z].kp;
+                temp_controller.ki = controller[0][y].ki;
+                temp_controller.kp = controller[0][y].kp;
+            }
+            else if (param < 0.6666) {
+                temp_controller.kp = controller[0][y].kp;
+                temp_controller.ki = controller[0][z].ki;
+                temp_controller.kp = controller[0][y].kp;
+            }
+            else {
+                temp_controller.kp = controller[0][y].kp;
+                temp_controller.ki = controller[0][y].ki;
+                temp_controller.kp = controller[0][z].kp;
+            }
+
+            temp_controller.scr  = BAD_SCORE / 2.0;
+            temp_controller.eval = false;
+            
+            exist = false;
+
+            for (j = 1; j < (i-1); j++) {
+                if ((controller[1][j].kp = temp_controller.kp) &&
+                    (controller[1][j].ki = temp_controller.ki) &&
+                    (controller[1][j].kd = temp_controller.kd)) {
+                    exist = true;
+                }
+                if (exist == true)
+                    break;
+            }
+
+            if (exist == false)
+                break;
+        }
+
+        controller[1][i] = temp_controller;
+    }
 }
 
 static void combine_elite_general() {
-    return;
+    int i, j;
+    int y = 0;
+    int z = 0;
+
+    float    param;
+    ctrl_inf temp_controller;
+    bool     exist;
+
+    for (i = 2*MAX_POP/10 + 1; i < 5*MAX_POP/10; i++) {
+        while (1) {
+            do {
+                y = (int) floor(randf() * (MAX_POP/10));
+            } while (!(y /= z)); /* no sé si esto es correcto */
+
+            do {
+                z = (int) floor(randf() * (MAX_POP/10));
+            } while ((z <= 0) || !(z /= y));
+
+            param = randf();
+            temp_controller = controller[1][i];
+
+            if (param < 0.3333) {
+                temp_controller.kp = controller[0][z].kp;
+                temp_controller.ki = controller[0][y].ki;
+                temp_controller.kp = controller[0][y].kp;
+            }
+            else if (param < 0.6666) {
+                temp_controller.kp = controller[0][y].kp;
+                temp_controller.ki = controller[0][z].ki;
+                temp_controller.kp = controller[0][y].kp;
+            } else {
+                temp_controller.kp = controller[0][y].kp;
+                temp_controller.ki = controller[0][y].ki;
+                temp_controller.kp = controller[0][z].kp;
+            }
+
+            temp_controller.scr  = BAD_SCORE / 2.0;
+            temp_controller.eval = false;
+
+            exist = false;
+
+            for (j = 1; j < (i-1); j++) {
+                if ((controller[1][j].kp = temp_controller.kp) &&
+                    (controller[1][j].ki = temp_controller.ki) &&
+                    (controller[1][j].kd = temp_controller.kd)) {
+                    exist = true;
+                }
+                if (exist == true)
+                    break;
+            }
+
+            if (exist == false)
+                break;
+        }
+
+        controller[1][i] = temp_controller;
+    }
 }
 
 static void combine_general() {
-    return;
+    int i, j;
+    int y = 0;
+    int z = 0;
+
+    float    param;
+    ctrl_inf temp_controller;
+    bool     exist;
+
+    for (i = 5*MAX_POP/10 + 1; i < 7*MAX_POP/10; i++) {
+        while (1) {
+            do {
+                y = (int) floor(randf() * (MAX_POP/10));
+            } while (!(y /= z));
+
+            do {
+                z = (int) floor(randf() * (MAX_POP/10));
+            } while ((z <= 0) || !(z /= y));
+
+            param = randf();
+            temp_controller = controller[1][i];
+
+            if (param < 0.3333) {
+                temp_controller.kp = controller[0][z].kp;
+                temp_controller.ki = controller[0][y].ki;
+                temp_controller.kp = controller[0][y].kp;
+            }
+            else if (param < 0.6666) {
+                temp_controller.kp = controller[0][y].kp;
+                temp_controller.ki = controller[0][z].ki;
+                temp_controller.kp = controller[0][y].kp;
+            } else {
+                temp_controller.kp = controller[0][y].kp;
+                temp_controller.ki = controller[0][y].ki;
+                temp_controller.kp = controller[0][z].kp;
+            }
+
+            temp_controller.scr  = BAD_SCORE / 2.0;
+            temp_controller.eval = false;
+
+            exist = false;
+
+            for (j = 1; j < (i-1); j++) {
+                if ((controller[1][j].kp = temp_controller.kp) &&
+                    (controller[1][j].ki = temp_controller.ki) &&
+                    (controller[1][j].kd = temp_controller.kd)) {
+                    exist = true;
+                }
+                if (exist == true)
+                    break;
+            }
+
+            if (exist == false)
+                break;
+        }
+
+        controller[1][i] = temp_controller;
+    }
+}
+
+static double randf() {
+    return (double)rand()/(double)RAND_MAX;
 }

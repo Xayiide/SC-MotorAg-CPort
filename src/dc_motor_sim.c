@@ -11,11 +11,11 @@ static float w[2];
 
 void init_dc_motor_sim() {
     motor_t = 0.0001;
-    R  = 1.11; /* Ohm */
-    L  = 0.0002; /* H */
-    J  = 6.77E-6; /* Kgm^2 */
-    fv = 1.66E-5; /* Nm/(Rad/s) */
-    K  = 0.0364; /* Nm/A or V/(Rad/s) */
+    R  = 1.11;    /* Ohm               */
+    L  = 0.0002;  /* H                 */
+    J  = 6.77E-6; /* Kgm^2             */
+    fv = 1.66E-5; /* Nm/(Rad/s)        */
+    K  = 0.0364;  /* Nm/A or V/(Rad/s) */
 
     ea   = 0.0;
     w[0] = 0.0;
