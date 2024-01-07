@@ -4,3 +4,8 @@
 # intermediary files
 *.swp
 
+# Eclipse
+.cproject
+.project
+.settings
+
