@@ -1,40 +1,37 @@
 #include "controller.h"
 #include "dc_motor_sim.h"
 
-static float kp, ki, kd;
-static float angular_speed_reference;
-static float e[2];
-static float ei, ed;
+void ctrl_init(struct controller *c, float new_kp, float new_ki, float new_kd)
+{
+    c->kp   = new_kp;
+    c->ki   = new_ki;
+    c->kd   = new_kd;
 
-
-void init_controller(float new_kp, float new_ki, float new_kd) {
-    kp   = new_kp;
-    ki   = new_ki;
-    kd   = new_kd;
-
-    e[0] = 0.0;
-    e[1] = 0.0;
-    ei   = 0.0;
-    ed   = 0.0;
+    c->e[0] = 0.0;
+    c->e[1] = 0.0;
+    c->ei   = 0.0;
+    c->ed   = 0.0;
 }
 
-void set_reference(float angular_speed) {
-    angular_speed_reference = angular_speed;
+void ctrl_set_reference(struct controller *c, float angular_speed)
+{
+    c->angular_speed_ref = angular_speed;
 }
 
-void exec_controller_cycle() {
+void ctrl_exec_cycle(struct controller *c, struct dcmsim_info *i)
+{
     float motor_speed;
     float new_motor_voltage;
     float controller_t = 0.001;
 
-    motor_speed = get_speed();
-    e[1] = angular_speed_reference - motor_speed;
-    ei = ei + e[1];
-    ed = (e[1] - e[0])/controller_t;
+    motor_speed = dcmsim_get_speed(i);
+    c->e[1] = c->angular_speed_ref - motor_speed;
+    c->ei = c->ei + c->e[1];
+    c->ed = (c->e[1] - c->e[0])/controller_t;
 
-    e[0] = e[1];
+    c->e[0] = c->e[1];
 
-    new_motor_voltage = (kp * e[1]) + (ki * ei) + (kd * ed);
-    set_ea(new_motor_voltage);
+    new_motor_voltage = (c->kp * c->e[1]) + (c->ki * c->ei) + (c->kd * c->ed);
+    dcmsim_set_ea(i, new_motor_voltage);
 }
 

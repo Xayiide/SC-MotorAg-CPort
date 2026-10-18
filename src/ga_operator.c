@@ -5,87 +5,60 @@
 #include <stdio.h>    /* printf  */
 #include <stdlib.h>   /* rand    */
 #include <stdint.h>   /* uint    */
-#include <inttypes.h> /* PRId64  */
 #include <stdbool.h>  /* bool    */
+#include <inttypes.h> /* PRId64  */
 #include <math.h>     /* floor   */
 
-static ctrl_inf controller[2][MAX_POP];
+#define MAX_POP 10000
 
-static uint8_t same_controller(ctrl_inf *, ctrl_inf *);
-static void    print_controller(ctrl_inf *);
-static void    bubble_sort();
-static void    combine_elite();
-static void    combine_elite_general();
-static void    combine_general();
-static double  randf();
+struct ctrl_inf {
+    float kp, ki, kd;
+    float score;
+    bool evaluated;
+};
 
+static struct ctrl_inf controller[2][MAX_POP];
 
-void init_pop() {
-    int i, j;
-    bool     exists = false;
-    ctrl_inf temp_controller;
+static void init_pop(struct ctrl_inf c[2][MAX_POP]);
+static void combination(struct ctrl_inf c[2][MAX_POP]);
+static void mutation(struct ctrl_inf c[2][MAX_POP]);
+static bool is_same_controller(struct ctrl_inf *a, struct ctrl_inf *b);
+static void print_controller(struct ctrl_inf *c);
+static void bubble_sort(struct ctrl_inf c[2][MAX_POP]);
+static void combine_elite(struct ctrl_inf c[2][MAX_POP]);
+static void combine_elite_general(struct ctrl_inf c[2][MAX_POP]);
+static void combine_general(struct ctrl_inf c[2][MAX_POP]);
+static double randf(void);
 
-    for (i = 0; i < MAX_POP - 1; i++) {
-        do {
-            temp_controller.kp   = ((float)rand()/(float)RAND_MAX) * 0.01;
-            temp_controller.ki   = ((float)rand()/(float)RAND_MAX) * 0.00001;
-            temp_controller.kd   = 0.00001;
-            temp_controller.scr  = BAD_SCORE / 2.0;
-            temp_controller.eval = false;
-
-            exists = false;
-
-            if (i > 1)
-                for (j = 0; j <= (i-1); j++)
-                    if (same_controller(&temp_controller, 
-                                        &controller[0][j]) == 0)
-                        exists = true;
-        } while (exists == true);
-        controller[0][i] = temp_controller;
-    }
-}
-
-
-void combination() {
-    combine_elite();
-    combine_elite_general();
-    combine_general();
-}
-
-
-void mutation() {
-
-}
-
-
-void run_ga() {
+void gaop_run(void)
+{
     uint64_t generation = 0;
     float    score;
     int      i;
 
-    init_pop();
+    init_pop(controller);
 
     while (1) {
         generation += 1;
         printf("Generation: %" PRIu64 "\n", generation);
 
         for (i = 0; i < MAX_POP; i++) {
-            if (controller[0][i].eval == false) {
-                score = carry_out_a_simulation(controller[0][i].kp,
-                                               controller[0][i].ki,
-                                               controller[0][i].kd);
-                controller[0][i].scr  = score;
-                controller[0][i].eval = true;
+            if (controller[0][i].evaluated == false) {
+                score = simop_simulate(controller[0][i].kp,
+                                       controller[0][i].ki,
+                                       controller[0][i].kd);
+                controller[0][i].score= score;
+                controller[0][i].evaluated = true;
             }
 
             printf("%" PRIu64 " ", generation);
             print_controller(&controller[0][i]);
         }
 
-        bubble_sort();
+        bubble_sort(controller);
 
 
-        if (controller[0][1].scr < 10.0 || generation > 50)
+        if (controller[0][1].score < 10.0 || generation > 50)
             break;
 
         /* prepare new generation in controller[1][x] */
@@ -97,10 +70,10 @@ void run_ga() {
         }
 
         /* combination */
-        combination();
+        combination(controller);
 
         /* mutation */
-        mutation();
+        mutation(controller);
 
         for (i = 0; i < MAX_POP; i++) {
             controller[0][i] = controller[1][i];
@@ -111,41 +84,83 @@ void run_ga() {
     printf("%f\n", controller[0][1].kp);
     printf("%f\n", controller[0][1].ki);
     printf("%f\n", controller[0][1].kd);
-    printf("%f\n", controller[0][1].scr);
+    printf("%f\n", controller[0][1].score);
 
     printf("Generation: %" PRIu64 "\n", generation);
 }
 
 
-static uint8_t same_controller(ctrl_inf *c1, ctrl_inf *c2) {
-    uint8_t res = 1;
-    if ((c1->kp  == c2->kp) && (c1->ki  == c2->ki) && (c1->kd  == c2->kd)) {
-        res = 0;
+/* Static functions */
+
+static void init_pop(struct ctrl_inf c[2][MAX_POP])
+{
+    int i, j;
+    bool exists = false;
+    struct ctrl_inf temp;
+
+    for (i = 0; i < MAX_POP; i++) {
+        do {
+            temp.kp = ((float)rand()/(float)RAND_MAX) * 0.01;
+            temp.ki = ((float)rand()/(float)RAND_MAX) * 0.00001;
+            temp.kd = 0.00001;
+            temp.score  = BAD_SCORE / 2.0;
+            temp.evaluated = false;
+
+            exists = false;
+
+            if (i > 1)
+                for (j = 0; j <= (i-1); j++)
+                    if (is_same_controller(&temp, &c[0][j]))
+                        exists = true;
+        } while (exists == true);
+        c[0][i] = temp;
+    }
+}
+
+static void combination(struct ctrl_inf c[2][MAX_POP])
+{
+    combine_elite(c);
+    combine_elite_general(c);
+    combine_general(c);
+}
+
+static void mutation(struct ctrl_inf c[2][MAX_POP])
+{
+    (void) c;
+}
+
+static bool is_same_controller(struct ctrl_inf *a, struct ctrl_inf *b)
+{
+    bool res = false;
+    if ((a->kp == b->kp) && (a->ki == b->ki) && (a->kd == b->kd)) {
+        res = true;
     }
 
     return res;
 }
 
-static void print_controller(ctrl_inf *ctrl) {
-    printf("| %f | ", ctrl->kp);
-    printf("%f | ",   ctrl->ki);
-    printf("%f | ",   ctrl->kd);
-    printf("%f |\n",  ctrl->scr);
+static void print_controller(struct ctrl_inf *c)
+{
+    printf("| %f | ", c->kp);
+    printf("%f | ",   c->ki);
+    printf("%f | ",   c->kd);
+    printf("%f |\n",  c->score);
 }
 
-static void bubble_sort() {
-    int      i;
-    bool     changes;
-    ctrl_inf temp_controller;
+static void bubble_sort(struct ctrl_inf c[2][MAX_POP])
+{
+    int  i;
+    bool changes;
+    struct ctrl_inf temp;
 
     changes = false;
     while (1) {
         for (i = 0; i < MAX_POP - 1; i++) {
-            if (controller[0][i].scr > controller[0][i+1].scr) {
+            if (c[0][i].score > c[0][i+1].score) {
                 changes = true;
-                temp_controller    = controller[0][i];
-                controller[0][i]   = controller[0][i+1];
-                controller[0][i+1] = temp_controller;
+                temp = c[0][i];
+                c[0][i] = c[0][i+1];
+                c[0][i+1] = temp;
             }
         }
         if (changes == false)
@@ -155,14 +170,15 @@ static void bubble_sort() {
 
 }
 
-static void combine_elite() {
+static void combine_elite(struct ctrl_inf c[2][MAX_POP])
+{
     int i, j;
     int y = 0;
     int z = 0;
 
-    float    param;
-    ctrl_inf temp_controller;
-    bool     exist;
+    float param;
+    struct ctrl_inf temp;
+    bool exist;
 
     for (i = MAX_POP/10 + 1; i < 2*MAX_POP/10; i++) {
         while (1) {
@@ -172,36 +188,36 @@ static void combine_elite() {
 
             do {
                 z = (int) floor(randf() * (MAX_POP/10));
-            } while ((z <= 0) || !(z /= y));
+            } while ((z <= 0) || (z == y));
 
             param = randf();
-            temp_controller = controller[1][i];
+            temp = c[1][i];
 
             if (param < 0.3333) {
-                temp_controller.kp = controller[0][z].kp;
-                temp_controller.ki = controller[0][y].ki;
-                temp_controller.kp = controller[0][y].kp;
+                temp.kp = c[0][z].kp;
+                temp.ki = c[0][y].ki;
+                temp.kp = c[0][y].kp;
             }
             else if (param < 0.6666) {
-                temp_controller.kp = controller[0][y].kp;
-                temp_controller.ki = controller[0][z].ki;
-                temp_controller.kp = controller[0][y].kp;
+                temp.kp = c[0][y].kp;
+                temp.ki = c[0][z].ki;
+                temp.kp = c[0][y].kp;
             }
             else {
-                temp_controller.kp = controller[0][y].kp;
-                temp_controller.ki = controller[0][y].ki;
-                temp_controller.kp = controller[0][z].kp;
+                temp.kp = c[0][y].kp;
+                temp.ki = c[0][y].ki;
+                temp.kp = c[0][z].kp;
             }
 
-            temp_controller.scr  = BAD_SCORE / 2.0;
-            temp_controller.eval = false;
+            temp.score = BAD_SCORE / 2.0;
+            temp.evaluated = false;
             
             exist = false;
 
             for (j = 1; j < (i-1); j++) {
-                if ((controller[1][j].kp = temp_controller.kp) &&
-                    (controller[1][j].ki = temp_controller.ki) &&
-                    (controller[1][j].kd = temp_controller.kd)) {
+                if ((c[1][j].kp = temp.kp) &&
+                    (c[1][j].ki = temp.ki) &&
+                    (c[1][j].kd = temp.kd)) {
                     exist = true;
                 }
                 if (exist == true)
@@ -212,56 +228,57 @@ static void combine_elite() {
                 break;
         }
 
-        controller[1][i] = temp_controller;
+        c[1][i] = temp;
     }
 }
 
-static void combine_elite_general() {
+static void combine_elite_general(struct ctrl_inf c[2][MAX_POP])
+{
     int i, j;
     int y = 0;
     int z = 0;
 
     float    param;
-    ctrl_inf temp_controller;
+    struct ctrl_inf temp;
     bool     exist;
 
     for (i = 2*MAX_POP/10 + 1; i < 5*MAX_POP/10; i++) {
         while (1) {
             do {
                 y = (int) floor(randf() * (MAX_POP/10));
-            } while (!(y /= z)); /* no sé si esto es correcto */
+            } while (y == 0);
 
             do {
                 z = (int) floor(randf() * (MAX_POP/10));
-            } while ((z <= 0) || !(z /= y));
+            } while ((z <= 0) || (z == y));
 
             param = randf();
-            temp_controller = controller[1][i];
+            temp= c[1][i];
 
             if (param < 0.3333) {
-                temp_controller.kp = controller[0][z].kp;
-                temp_controller.ki = controller[0][y].ki;
-                temp_controller.kp = controller[0][y].kp;
+                temp.kp = c[0][z].kp;
+                temp.ki = c[0][y].ki;
+                temp.kp = c[0][y].kp;
             }
             else if (param < 0.6666) {
-                temp_controller.kp = controller[0][y].kp;
-                temp_controller.ki = controller[0][z].ki;
-                temp_controller.kp = controller[0][y].kp;
+                temp.kp = c[0][y].kp;
+                temp.ki = c[0][z].ki;
+                temp.kp = c[0][y].kp;
             } else {
-                temp_controller.kp = controller[0][y].kp;
-                temp_controller.ki = controller[0][y].ki;
-                temp_controller.kp = controller[0][z].kp;
+                temp.kp = c[0][y].kp;
+                temp.ki = c[0][y].ki;
+                temp.kp = c[0][z].kp;
             }
 
-            temp_controller.scr  = BAD_SCORE / 2.0;
-            temp_controller.eval = false;
+            temp.score = BAD_SCORE / 2.0;
+            temp.evaluated = false;
 
             exist = false;
 
             for (j = 1; j < (i-1); j++) {
-                if ((controller[1][j].kp = temp_controller.kp) &&
-                    (controller[1][j].ki = temp_controller.ki) &&
-                    (controller[1][j].kd = temp_controller.kd)) {
+                if ((c[1][j].kp = temp.kp) &&
+                    (c[1][j].ki = temp.ki) &&
+                    (c[1][j].kd = temp.kd)) {
                     exist = true;
                 }
                 if (exist == true)
@@ -272,56 +289,57 @@ static void combine_elite_general() {
                 break;
         }
 
-        controller[1][i] = temp_controller;
+        c[1][i] = temp;
     }
 }
 
-static void combine_general() {
+static void combine_general(struct ctrl_inf c[2][MAX_POP])
+{
     int i, j;
     int y = 0;
     int z = 0;
 
     float    param;
-    ctrl_inf temp_controller;
+    struct ctrl_inf temp;
     bool     exist;
 
     for (i = 5*MAX_POP/10 + 1; i < 7*MAX_POP/10; i++) {
         while (1) {
             do {
                 y = (int) floor(randf() * (MAX_POP/10));
-            } while (!(y /= z));
+            } while (y == z);
 
             do {
                 z = (int) floor(randf() * (MAX_POP/10));
-            } while ((z <= 0) || !(z /= y));
+            } while ((z <= 0) || (z == y));
 
             param = randf();
-            temp_controller = controller[1][i];
+            temp = c[1][i];
 
             if (param < 0.3333) {
-                temp_controller.kp = controller[0][z].kp;
-                temp_controller.ki = controller[0][y].ki;
-                temp_controller.kp = controller[0][y].kp;
+                temp.kp = c[0][z].kp;
+                temp.ki = c[0][y].ki;
+                temp.kp = c[0][y].kp;
             }
             else if (param < 0.6666) {
-                temp_controller.kp = controller[0][y].kp;
-                temp_controller.ki = controller[0][z].ki;
-                temp_controller.kp = controller[0][y].kp;
+                temp.kp = c[0][y].kp;
+                temp.ki = c[0][z].ki;
+                temp.kp = c[0][y].kp;
             } else {
-                temp_controller.kp = controller[0][y].kp;
-                temp_controller.ki = controller[0][y].ki;
-                temp_controller.kp = controller[0][z].kp;
+                temp.kp = c[0][y].kp;
+                temp.ki = c[0][y].ki;
+                temp.kp = c[0][z].kp;
             }
 
-            temp_controller.scr  = BAD_SCORE / 2.0;
-            temp_controller.eval = false;
+            temp.score = BAD_SCORE / 2.0;
+            temp.evaluated = false;
 
             exist = false;
 
             for (j = 1; j < (i-1); j++) {
-                if ((controller[1][j].kp = temp_controller.kp) &&
-                    (controller[1][j].ki = temp_controller.ki) &&
-                    (controller[1][j].kd = temp_controller.kd)) {
+                if ((c[1][j].kp = temp.kp) &&
+                    (c[1][j].ki = temp.ki) &&
+                    (c[1][j].kd = temp.kd)) {
                     exist = true;
                 }
                 if (exist == true)
@@ -332,7 +350,7 @@ static void combine_general() {
                 break;
         }
 
-        controller[1][i] = temp_controller;
+        c[1][i] = temp;
     }
 }
 

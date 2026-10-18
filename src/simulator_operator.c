@@ -6,8 +6,11 @@
 #include "controller.h"
 #include "simulator_operator.h"
 
+static struct dcmsim_info dcmotor;
+static struct controller ctrl;
 
-float carry_out_a_simulation(float kp, float ki, float kd) {
+float simop_simulate(float kp, float ki, float kd)
+{
     const float ref = 80.0; /* rad/s */
     const int   expected_tr = 140; /* 14 ms */
     const float expected_mp = ref * 1.07; /* 7% (85.8 for 80 rad/s) */
@@ -21,37 +24,39 @@ float carry_out_a_simulation(float kp, float ki, float kd) {
     float aux_mp;
     int   i;
 
-    init_dc_motor_sim();
-    init_controller(kp, ki, kd);
+    dcmsim_init(&dcmotor);
+    ctrl_init(&ctrl, kp, ki, kd);
 
-    set_reference(ref);
+    ctrl_set_reference(&ctrl, ref);
 
     for (i = 0; i < 2000; i++)
         speed[i] = 0.0;
         
-    exec_controller_cycle();
-    exec_sim_cycle();
+    ctrl_exec_cycle(&ctrl, &dcmotor);
+    dcmsim_exec_sim_cycle(&dcmotor);
 
     for (i = 0; i < 2000; i++) {
-        speed[i] = get_speed();
+        speed[i] = dcmsim_get_speed(&dcmotor);
 
-        /* extreme values */
+        /* Verify extreme values */
         if ((speed[i] > (ref * 5.0)) || (speed[i] < 0.0)) {
             abort_sim = true;
             break;
         }
 
         if (i % 10 == 0) /* controller runs every milisecond */
-            exec_controller_cycle();
+            ctrl_exec_cycle(&ctrl, &dcmotor);
 
-        exec_sim_cycle();
+        dcmsim_exec_sim_cycle(&dcmotor);
     }
 
     if (abort_sim) {
         score = BAD_SCORE;
     }
     else {
+        /* Look for rise time */
         tr = 0;
+        /* Penalize oscillations */
         for (i = 1; i < 2000; i++) {
             if (ref_reached == false) { /* values in 2..tr */
                 if (speed[i] > ref) {

@@ -9,3 +9,11 @@
 .project
 .settings
 
+# VSCode
+.vscode
+
+# Build
+build/
+
+# Original Ada source
+original/
