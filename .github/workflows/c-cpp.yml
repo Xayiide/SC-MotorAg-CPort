@@ -9,12 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: src/
+        working-directory: .
     steps:
     - uses: actions/checkout@v3
     - name: Compile the project
-      run: make
+      run: ./sc.sh build release
+    - name: Run the project
+      run: ./sc.sh run release
     - name: Clean
-      run: make clean
-    - name: Clean and compile
-      run: make re
+      run: ./sc.sh clean
