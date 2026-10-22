@@ -13,8 +13,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Compile the project
-      run: ./sc.sh build release
+      run: ./ag.sh build release
     - name: Run the project
-      run: ./sc.sh run release
+      run: ./ag.sh run release
     - name: Clean
       run: ./sc.sh clean

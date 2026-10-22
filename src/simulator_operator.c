@@ -14,7 +14,8 @@ float simop_simulate(float kp, float ki, float kd)
     float score;
     float speed[2000]; /* samples during 0.2s */   
     bool  abort_sim = false;
-    int   tr, ts;
+    int   tr = 0;
+    int   ts = 0;
 
     const float ref = 80.0; /* rad/s */
     const int   expected_tr = 120; /* 12 ms */
