@@ -1,5 +1,5 @@
-#ifndef _CONTROLLER_H_
-#define _CONTROLLER_H_
+#ifndef CONTROLLER_H_
+#define CONTROLLER_H_
 
 #include "dc_motor_sim.h"
 
@@ -14,4 +14,4 @@ void ctrl_init(struct controller *c, float new_kp, float new_ki, float new_kd);
 void ctrl_set_reference(struct controller *c, float angular_speed);
 void ctrl_exec_cycle(struct controller *c, struct dcmsim_info *i);
 
-#endif
+#endif /* CONTROLLER_H_ */

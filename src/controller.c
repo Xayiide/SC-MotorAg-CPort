@@ -22,13 +22,14 @@ void ctrl_exec_cycle(struct controller *c, struct dcmsim_info *i)
 {
     float motor_speed;
     float new_motor_voltage;
-    float controller_t = 0.001;
+    const float controller_t = 0.001;
 
     motor_speed = dcmsim_get_speed(i);
     c->e[1] = c->angular_speed_ref - motor_speed;
     c->ei = c->ei + c->e[1];
     c->ed = (c->e[1] - c->e[0])/controller_t;
 
+    /* Prepare last error for next cycle */
     c->e[0] = c->e[1];
 
     new_motor_voltage = (c->kp * c->e[1]) + (c->ki * c->ei) + (c->kd * c->ed);

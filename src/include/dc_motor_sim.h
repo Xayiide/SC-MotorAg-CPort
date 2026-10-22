@@ -1,5 +1,5 @@
-#ifndef _DC_MOTOR_SIM_H_
-#define _DC_MOTOR_SIM_H_
+#ifndef DC_MOTOR_SIM_H_
+#define DC_MOTOR_SIM_H_
 
 struct dcmsim_info {
     float motor_t;
@@ -21,5 +21,4 @@ float dcmsim_get_speed(struct dcmsim_info *i);
 void dcmsim_exec_sim_cycle(struct dcmsim_info *i);
 
 
-#endif
-
+#endif /* DC_MOTOR_SIM_H_ */

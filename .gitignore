@@ -17,3 +17,7 @@ build/
 
 # Original Ada source
 original/
+
+# Ficheros de log
+*.log
+*.txt

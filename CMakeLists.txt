@@ -11,6 +11,7 @@ add_executable(sc-motor-ag
     src/ga_operator.c
     src/main.c
     src/simulator_operator.c
+    src/test.c
 )
 
 target_include_directories(sc-motor-ag PRIVATE
@@ -21,5 +22,11 @@ target_compile_options(sc-motor-ag PRIVATE
     -Wall
     -Wextra
 )
+
+option(PRINT_TRACES "Habilita texto de depuración" OFF)
+
+if (PRINT_TRACES)
+    target_compile_definitions(sc-motor-ag PRIVATE PRINT_TRACES)
+endif()
 
 target_link_libraries(sc-motor-ag PRIVATE m)

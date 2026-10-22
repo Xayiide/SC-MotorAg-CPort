@@ -11,30 +11,31 @@ static struct controller ctrl;
 
 float simop_simulate(float kp, float ki, float kd)
 {
-    const float ref = 80.0; /* rad/s */
-    const int   expected_tr = 140; /* 14 ms */
-    const float expected_mp = ref * 1.07; /* 7% (85.8 for 80 rad/s) */
     float score;
     float speed[2000]; /* samples during 0.2s */   
-    bool  ref_reached = false;
-    bool  tp_checked  = false;
-    bool  abort_sim   = false;
-    int   tr;
-    float mp;
-    float aux_mp;
+    bool  abort_sim = false;
+    int   tr, ts;
+
+    const float ref = 80.0; /* rad/s */
+    const int   expected_tr = 120; /* 12 ms */
+    //const int   expected_tp = 140; /* 14 ms */
+    //const float expected_mp = 0.05 * ref; /* 5% */
+    const int   expected_ts = 900; /* 10 ms */
+
     int   i;
 
     dcmsim_init(&dcmotor);
     ctrl_init(&ctrl, kp, ki, kd);
-
     ctrl_set_reference(&ctrl, ref);
 
+    /* Initialize speed */
     for (i = 0; i < 2000; i++)
         speed[i] = 0.0;
         
     ctrl_exec_cycle(&ctrl, &dcmotor);
     dcmsim_exec_sim_cycle(&dcmotor);
 
+    /* Calculate each sample (0.2 s each 0.1 ms means 2000 samples) */
     for (i = 0; i < 2000; i++) {
         speed[i] = dcmsim_get_speed(&dcmotor);
 
@@ -57,6 +58,33 @@ float simop_simulate(float kp, float ki, float kd)
         /* Look for rise time */
         tr = 0;
         /* Penalize oscillations */
+        for (i = 1; i < 2000; i++) {
+            if (speed[i] < speed[i - 1]) {
+                tr = BAD_SCORE_INT;
+                break;
+            }
+        }
+
+        if (tr == 0) {
+            for (i = 1999; i >= 0; i--) {
+                if (speed[i] > (ref * 0.63)) {
+                    tr = i;
+                }
+            }
+        }
+
+        /* Look for settling time */
+        if ((tr > 0) && (tr < 2000)) {
+            for (i = tr; i < 2000; i++) {
+                if (fabs(ref - speed[i]) > ref * 0.02) {
+                    ts = i;
+                }
+            }
+        }
+        else {
+            ts = BAD_SCORE_INT;
+        }
+#if 0
         for (i = 1; i < 2000; i++) {
             if (ref_reached == false) { /* values in 2..tr */
                 if (speed[i] > ref) {
@@ -84,8 +112,9 @@ float simop_simulate(float kp, float ki, float kd)
                 }
             }
         }
+#endif
 
-        score = (float)(abs(tr - expected_tr) + fabs(mp - expected_mp));
+        score = (float) (abs(tr - expected_tr) + abs(ts - expected_ts));
     }
     return score;
 }

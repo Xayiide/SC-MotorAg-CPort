@@ -16,16 +16,29 @@ RUN_ERROR=3
 
 usage() {
     echo -e "Uso: ${YELLOW}$0 <opcion>${RESET}"
-    echo -e "    ${GREEN}build${RESET} [debug|release]"
+    echo -e "    ${GREEN}build${RESET} [debug|release] [traces|--traces] [verbose|--verbose]"
     echo -e "    ${GREEN}run${RESET} [debug|release]"
     echo -e "    ${GREEN}clean${RESET}"
 }
 
+run_cmd() {
+    local cmd="$1"
+    echo -e "Ejecutando ${YELLOW}$cmd${RESET}"
+
+    if eval "$cmd"; then
+        echo -n ""
+    else
+        echo -e "${RED}Error:${RESET} ${YELLOW}$cmd${RESET} falló ($?)"
+        exit 1
+    fi
+}
+
 build() {
-    local profile="${1:-debug}"
+    local profile="debug"
     local build_options
     local build_type
     local arg
+    local print_traces="-DPRINT_TRACES=OFF"
 
     for arg in "$@"; do
         case "$arg" in
@@ -34,6 +47,9 @@ build() {
                 ;;
             verbose|--verbose)
                 build_options+=(--verbose)
+                ;;
+            traces|--traces)
+                print_traces="-DPRINT_TRACES=ON"
                 ;;
             *)
                 echo -e "${RED}Error:${RESET} Opción no válida: $arg" >&2
@@ -58,12 +74,13 @@ build() {
     BUILD_DIR="$ROOT_DIR/build/$profile"
 
     echo -e "${GREEN}Configurando${RESET} compilación ${build_type}"
-    cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
-        -DCMAKE_BUILD_TYPE="$build_type" \
-        -DCMAKE_C_COMPILER=/usr/bin/gcc
+    run_cmd "cmake -S ${ROOT_DIR} -B ${BUILD_DIR} \
+            ${print_traces} \
+            -DCMAKE_BUILD_TYPE=${build_type} \
+            -DCMAKE_C_COMPILER=/usr/bin/gcc"
 
     echo -e "${GREEN}Compilando${RESET}"
-    cmake --build "$BUILD_DIR" "${build_options[@]}"
+    run_cmd "cmake --build ${BUILD_DIR} ${build_options[@]}"
 }
 
 run() {
@@ -76,7 +93,7 @@ run() {
         exit $RUN_ERROR
     fi
 
-    "$executable"
+    run_cmd "${executable}"
 }
 
 clean() {

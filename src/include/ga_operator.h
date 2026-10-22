@@ -1,6 +1,6 @@
-#ifndef _GA_OPERATOR_H_
-#define _GA_OPERATOR_H_
+#ifndef GA_OPERATOR_H_
+#define GA_OPERATOR_H_
 
 void gaop_run(void);
 
-#endif
+#endif /* GA_OPERATOR_H_ */
