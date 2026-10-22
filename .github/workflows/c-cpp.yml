@@ -11,10 +11,18 @@ jobs:
       run:
         working-directory: .
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7.0.1
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      with:
+        version: "0.13.5"
+
     - name: Compile the project
       run: ./ag.sh build release
+
     - name: Run the project
       run: ./ag.sh run release
+
     - name: Clean
       run: ./sc.sh clean
