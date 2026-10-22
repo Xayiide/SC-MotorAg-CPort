@@ -33,7 +33,7 @@ static double randf(void);
 static void print_controller(struct ctrl_inf *c);
 #endif
 
-void gaop_run(void)
+void gaop_run(const char *filename)
 {
     uint64_t generation = 0;
     float    score;
@@ -95,7 +95,8 @@ void gaop_run(void)
 
     test_and_log_controller(controller[0][0].kp,
                     controller[0][0].ki,
-                    controller[0][0].kd);
+                    controller[0][0].kd,
+                    filename);
 }
 
 

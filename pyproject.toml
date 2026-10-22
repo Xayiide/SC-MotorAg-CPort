@@ -1,0 +1,9 @@
+[project]
+name = "sc-motorag-cport"
+version = "0.1.0"
+description = "Port a C de un algoritmo genético en Ada"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib>=3.11.2",
+]

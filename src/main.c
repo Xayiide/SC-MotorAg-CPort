@@ -4,10 +4,15 @@
 
 #include "ga_operator.h"
 
-int main() {
+int main(int argc, char **argv) {
     srand(time(NULL));
 
-    gaop_run();
+    if (argc != 2) {
+        printf("Uso: %s <test_log_file>\n", argv[0]);
+        return 1;
+    }
+
+    gaop_run(argv[1]);
 
     return 0;
 }

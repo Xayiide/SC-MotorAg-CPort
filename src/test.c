@@ -5,9 +5,8 @@
 #include <dc_motor_sim.h>
 #include "controller.h"
 
-#define FILENAME "controller_test_output.txt"
 
-void test_and_log_controller(float kp, float ki, float kd)
+void test_and_log_controller(float kp, float ki, float kd, const char *fn)
 {
     float speed;
     struct dcmsim_info dcmotor;
@@ -16,9 +15,9 @@ void test_and_log_controller(float kp, float ki, float kd)
     int i;
     FILE *fd;
 
-    fd = fopen(FILENAME, "w");
+    fd = fopen(fn, "w");
     if (fd == NULL) {
-        printf("Error abriendo archivo: %s\n", FILENAME);
+        printf("Error abriendo archivo: %s\n", fn);
         return;
     }
 
@@ -36,7 +35,6 @@ void test_and_log_controller(float kp, float ki, float kd)
         fprintf(fd, "%f\n", speed);
     }
 
-    fprintf(fd, "\n");
     fclose(fd);
-    printf("Prueba registrada correctamente en %s\n", FILENAME);
+    printf("Prueba registrada correctamente en %s\n", fn);
 }

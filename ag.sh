@@ -5,6 +5,8 @@ readonly YELLOW="\e[1;33m"
 readonly RED="\e[1;31m"
 readonly RESET="\e[0m"
 
+TESTLOG="controller_test_output.txt"
+SALIDAPNG="simulacion.png"
 
 PROGRAM_NAME="sc-motor-ag"
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -93,7 +95,8 @@ run() {
         exit $RUN_ERROR
     fi
 
-    run_cmd "${executable}"
+    run_cmd "${executable} ${TESTLOG}"
+    run_cmd "uv run python3 -m scripts.plot ${TESTLOG} ${SALIDAPNG}"
 }
 
 clean() {

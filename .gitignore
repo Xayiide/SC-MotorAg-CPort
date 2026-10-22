@@ -1,3 +1,6 @@
+# venv
+.venv
+
 # object files
 *.o
 
@@ -18,6 +21,10 @@ build/
 # Original Ada source
 original/
 
-# Ficheros de log
+# Ficheros de log y resultados
 *.log
 *.txt
+*.png
+
+# Caché de Python
+__pycache__

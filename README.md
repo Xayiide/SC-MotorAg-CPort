@@ -9,6 +9,6 @@ El algoritmo no tiene dependencias, pero el script de Python sí. Todo está ges
 
 # Modo de uso
 
-La compilación y la ejecución se realiza con el script `sc.sh`. Para compilar el proyecto, utilizar `./sc.sh build`, y para ejecutarlo `./sc.sh run`. La compilación acepta la opción `verbose` para mostrar los comandos completos de `Cmake` y `traces` para mostrar los controladores generados internamente dentro del algoritmo genético. Esta opción imprime mucho texto, así que utilizar con cuidado.
+La compilación y la ejecución se realiza con el script `ag.sh`. Para compilar el proyecto, utilizar `./ag.sh build`, y para ejecutarlo `./ag.sh run`. La compilación acepta la opción `verbose` para mostrar los comandos completos de `Cmake` y `traces` para mostrar los controladores generados internamente dentro del algoritmo genético. Esta opción imprime mucho texto, así que utilizar con cuidado.
 
 Al terminar la ejecución, se escriben los resultados a un fichero de texto y se ejecuta un script de Python que los grafica.
