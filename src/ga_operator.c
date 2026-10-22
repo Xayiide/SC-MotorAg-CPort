@@ -47,6 +47,7 @@ void gaop_run(const char *filename)
         generation += 1;
         printf("Generation: %" PRIu64 "\n", generation);
 
+        #pragma omp parallel for schedule(dynamic, 64)
         for (i = 0; i < MAX_POP; i++) {
             if (controller[0][i].evaluated == false) {
                 score = simop_simulate(controller[0][i].kp,
@@ -56,12 +57,6 @@ void gaop_run(const char *filename)
                 controller[0][i].evaluated = true;
             }
 
-#if 0
-#if defined(PRINT_TRACES)
-            printf("%" PRIu64 " ", generation);
-            print_controller(&controller[0][i]);
-#endif
-#endif
         }
 
         sort(controller);

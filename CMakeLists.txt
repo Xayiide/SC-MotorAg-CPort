@@ -14,6 +14,8 @@ add_executable(sc-motor-ag
     src/test.c
 )
 
+find_package(OpenMP REQUIRED COMPONENTS C)
+
 target_include_directories(sc-motor-ag PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/include
 )
@@ -29,4 +31,4 @@ if (PRINT_TRACES)
     target_compile_definitions(sc-motor-ag PRIVATE PRINT_TRACES)
 endif()
 
-target_link_libraries(sc-motor-ag PRIVATE m)
+target_link_libraries(sc-motor-ag PRIVATE m OpenMP::OpenMP_C)

@@ -6,8 +6,6 @@
 #include "controller.h"
 #include "simulator_operator.h"
 
-static struct dcmsim_info dcmotor;
-static struct controller ctrl;
 
 float simop_simulate(float kp, float ki, float kd)
 {
@@ -24,6 +22,9 @@ float simop_simulate(float kp, float ki, float kd)
     const int   expected_ts = 900; /* 10 ms */
 
     int   i;
+
+    struct dcmsim_info dcmotor;
+    struct controller ctrl;
 
     dcmsim_init(&dcmotor);
     ctrl_init(&ctrl, kp, ki, kd);
