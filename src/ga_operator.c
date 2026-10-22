@@ -1,9 +1,9 @@
-#include <stdio.h>    /* printf  */
-#include <stdlib.h>   /* rand    */
-#include <stdint.h>   /* uint    */
-#include <stdbool.h>  /* bool    */
-#include <inttypes.h> /* PRId64  */
-#include <math.h>     /* floor   */
+#include <stdio.h>    /* printf      */
+#include <stdlib.h>   /* rand, qsort */
+#include <stdint.h>   /* uint        */
+#include <stdbool.h>  /* bool        */
+#include <inttypes.h> /* PRId64      */
+#include <math.h>     /* floor       */
 
 #include "ga_operator.h"
 #include "simulator_operator.h"
@@ -11,6 +11,7 @@
 #include "test.h"
 
 #define MAX_POP 10000
+#define MAX_TRIES_COMB_MUTATION 10
 
 struct ctrl_inf {
     float kp, ki, kd;
@@ -27,7 +28,8 @@ static void combination(struct ctrl_inf c[2][MAX_POP]);
 static void combine_elite(struct ctrl_inf c[2][MAX_POP]);
 static void combine_elite_general(struct ctrl_inf c[2][MAX_POP]);
 static void combine_general(struct ctrl_inf c[2][MAX_POP]);
-static void bubble_sort(struct ctrl_inf c[2][MAX_POP]);
+static int  cmp_score(const void *left, const void *right);
+static void sort(struct ctrl_inf c[2][MAX_POP]);
 static double randf(void);
 #if defined(PRINT_TRACES)
 static void print_controller(struct ctrl_inf *c);
@@ -54,14 +56,20 @@ void gaop_run(const char *filename)
                 controller[0][i].evaluated = true;
             }
 
+#if 0
 #if defined(PRINT_TRACES)
             printf("%" PRIu64 " ", generation);
             print_controller(&controller[0][i]);
 #endif
+#endif
         }
 
-        bubble_sort(controller);
+        sort(controller);
 
+#if defined(PRINT_TRACES)
+            printf("%" PRIu64 " ", generation);
+            print_controller(&controller[0][0]);
+#endif
 
         /* Condición de éxito */
         if (controller[0][0].score < 10.0 || generation > 50) // TODO: sacar a constantes
@@ -146,6 +154,7 @@ static void mutation(struct ctrl_inf c[2][MAX_POP])
 
     struct ctrl_inf temp;
     bool exist;
+    uint8_t num_tries = 0;
 
     for (i = (7*MAX_POP/10); i < MAX_POP; i++) {
         while (1) {
@@ -157,7 +166,7 @@ static void mutation(struct ctrl_inf c[2][MAX_POP])
             param    = randf(); /* Select a parameter to mutate */
             severity = randf(); /* Select a severity of mutation */
             sign     = randf(); /* Select the sign of the mutation */
-            temp     = c[0][i];
+            temp     = c[0][y];
 
             if (sign >= 0.5) {
                 if (param < 0.3333) {
@@ -236,8 +245,10 @@ static void mutation(struct ctrl_inf c[2][MAX_POP])
                     break;
             }
 
-            if (exist == false)
+            if (exist == false || num_tries >= MAX_TRIES_COMB_MUTATION)
                 break;
+
+            num_tries++;
         }
 
         c[1][i] = temp;
@@ -262,6 +273,7 @@ static void combine_elite(struct ctrl_inf c[2][MAX_POP])
     float param;
     struct ctrl_inf temp;
     bool exist;
+    uint8_t num_tries = 0;
 
     for (i = MAX_POP/10; i < 2*MAX_POP/10; i++) {
         while (1) {
@@ -308,8 +320,10 @@ static void combine_elite(struct ctrl_inf c[2][MAX_POP])
                     break;
             }
 
-            if (exist == false)
+            if (exist == false || num_tries >= MAX_TRIES_COMB_MUTATION)
                 break;
+
+            num_tries++;
         }
 
         c[1][i] = temp;
@@ -325,6 +339,7 @@ static void combine_elite_general(struct ctrl_inf c[2][MAX_POP])
     float    param;
     struct ctrl_inf temp;
     bool     exist;
+    uint8_t  num_tries = 0;
 
     for (i = 2*MAX_POP/10; i < 5*MAX_POP/10; i++) {
         while (1) {
@@ -368,8 +383,10 @@ static void combine_elite_general(struct ctrl_inf c[2][MAX_POP])
                     break;
             }
 
-            if (exist == false)
+            if (exist == false || num_tries >= MAX_TRIES_COMB_MUTATION)
                 break;
+
+            num_tries++;
         }
 
         c[1][i] = temp;
@@ -385,6 +402,7 @@ static void combine_general(struct ctrl_inf c[2][MAX_POP])
     float    param;
     struct ctrl_inf temp;
     bool     exist;
+    uint8_t  num_tries = 0;
 
     for (i = 5*MAX_POP/10; i < 7*MAX_POP/10; i++) {
         while (1) {
@@ -428,35 +446,27 @@ static void combine_general(struct ctrl_inf c[2][MAX_POP])
                     break;
             }
 
-            if (exist == false)
+            if (exist == false || num_tries >= MAX_TRIES_COMB_MUTATION)
                 break;
+
+            num_tries++;
         }
 
         c[1][i] = temp;
     }
 }
 
-static void bubble_sort(struct ctrl_inf c[2][MAX_POP])
+static int  cmp_score(const void *left, const void *right)
 {
-    int  i;
-    bool changes;
-    struct ctrl_inf temp;
+    const struct ctrl_inf *a = left;
+    const struct ctrl_inf *b = right;
 
-    changes = false;
-    while (1) {
-        for (i = 0; i < MAX_POP - 1; i++) {
-            if (c[0][i].score > c[0][i+1].score) {
-                changes = true;
-                temp = c[0][i];
-                c[0][i] = c[0][i+1];
-                c[0][i+1] = temp;
-            }
-        }
-        if (changes == false)
-            break;
-        changes = false;
-    }
+    return(a->score > b->score) - (a->score < b->score);
+}
 
+static void sort(struct ctrl_inf c[2][MAX_POP])
+{
+    qsort(c[0], MAX_POP, sizeof(c[0][0]), cmp_score);
 }
 
 static double randf() {
