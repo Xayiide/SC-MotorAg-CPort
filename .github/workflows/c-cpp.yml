@@ -25,4 +25,4 @@ jobs:
       run: ./ag.sh run release
 
     - name: Clean
-      run: ./sc.sh clean
+      run: ./ag.sh clean
