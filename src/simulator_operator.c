@@ -11,15 +11,20 @@ float simop_simulate(float kp, float ki, float kd)
 {
     float score;
     float speed[2000]; /* samples during 0.2s */   
-    bool  abort_sim = false;
     int   tr = 0;
-    int   ts = 0;
+    //int   ts = 0;
+    float mp = 0;
+    float aux_mp = 0;
 
     const float ref = 80.0; /* rad/s */
-    const int   expected_tr = 120; /* 12 ms */
+    const int   expected_tr = 140; /* 14 ms */
     //const int   expected_tp = 140; /* 14 ms */
-    //const float expected_mp = 0.05 * ref; /* 5% */
-    const int   expected_ts = 900; /* 10 ms */
+    const float expected_mp = 0.07 * ref; /* 7 % */
+    //const int   expected_ts = 900; /* 10 ms */
+
+    bool ref_reached = false;
+    bool tp_checked  = false;
+    bool abort_sim   = false;
 
     int   i;
 
@@ -57,36 +62,6 @@ float simop_simulate(float kp, float ki, float kd)
         score = BAD_SCORE;
     }
     else {
-        /* Look for rise time */
-        tr = 0;
-        /* Penalize oscillations */
-        for (i = 1; i < 2000; i++) {
-            if (speed[i] < speed[i - 1]) {
-                tr = BAD_SCORE_INT;
-                break;
-            }
-        }
-
-        if (tr == 0) {
-            for (i = 1999; i >= 0; i--) {
-                if (speed[i] > (ref * 0.63)) {
-                    tr = i;
-                }
-            }
-        }
-
-        /* Look for settling time */
-        if ((tr > 0) && (tr < 2000)) {
-            for (i = tr; i < 2000; i++) {
-                if (fabs(ref - speed[i]) > ref * 0.02) {
-                    ts = i;
-                }
-            }
-        }
-        else {
-            ts = BAD_SCORE_INT;
-        }
-#if 0
         for (i = 1; i < 2000; i++) {
             if (ref_reached == false) { /* values in 2..tr */
                 if (speed[i] > ref) {
@@ -114,9 +89,7 @@ float simop_simulate(float kp, float ki, float kd)
                 }
             }
         }
-#endif
-
-        score = (float) (abs(tr - expected_tr) + abs(ts - expected_ts));
+        score = (float) (abs(tr - expected_tr) + fabs(mp - expected_mp));
     }
     return score;
 }
