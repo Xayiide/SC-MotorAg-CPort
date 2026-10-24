@@ -21,7 +21,6 @@ float simop_simulate(float kp, float ki, float kd)
     const float ref = 80.0; /* rad/s */
     const int   expected_tr = 140; /* 14 ms */
     const float expected_mp = 0.07 * ref; /* 7 % */
-    const float max_speed_allowed = ref + expected_mp;
 
     bool ref_reached = false;
     bool tp_checked  = false;
