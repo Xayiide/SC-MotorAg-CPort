@@ -31,7 +31,7 @@ run_cmd() {
         echo -n ""
     else
         echo -e "${RED}Error:${RESET} ${YELLOW}$cmd${RESET} falló ($?)"
-        exit 1
+        exit $RUN_ERROR
     fi
 }
 
@@ -108,7 +108,7 @@ set -eo pipefail
 
 if [ -z "$1" ]; then
     usage
-    exit 0
+    exit $CALL_ERROR
 fi
 
 COMMAND="${1:-}"

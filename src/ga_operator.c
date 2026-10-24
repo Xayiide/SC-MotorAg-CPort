@@ -12,6 +12,8 @@
 
 #define MAX_POP 10000
 #define MAX_TRIES_COMB_MUTATION 10
+#define MAX_GENERATIONS 50
+#define SUCCESS_SCORE 10.0f
 
 struct ctrl_inf {
     float kp, ki, kd;
@@ -21,6 +23,7 @@ struct ctrl_inf {
 
 static struct ctrl_inf controller[2][MAX_POP];
 
+static void simulate_controller(struct ctrl_inf *c);
 static bool is_same_controller(struct ctrl_inf *a, struct ctrl_inf *b);
 static void init_pop(struct ctrl_inf c[2][MAX_POP]);
 static void mutation(struct ctrl_inf c[2][MAX_POP]);
@@ -38,7 +41,6 @@ static void print_controller(struct ctrl_inf *c);
 void gaop_run(const char *filename)
 {
     uint64_t generation = 0;
-    float    score;
     int      i;
 
     init_pop(controller);
@@ -50,11 +52,7 @@ void gaop_run(const char *filename)
         #pragma omp parallel for schedule(dynamic, 64)
         for (i = 0; i < MAX_POP; i++) {
             if (controller[0][i].evaluated == false) {
-                score = simop_simulate(controller[0][i].kp,
-                                       controller[0][i].ki,
-                                       controller[0][i].kd);
-                controller[0][i].score= score;
-                controller[0][i].evaluated = true;
+                simulate_controller(&controller[0][i]);
             }
 
         }
@@ -67,7 +65,8 @@ void gaop_run(const char *filename)
 #endif
 
         /* Condición de éxito */
-        if (controller[0][0].score < 10.0 || generation > 50) // TODO: sacar a constantes
+        if ((controller[0][0].score < SUCCESS_SCORE)
+           || (generation > MAX_GENERATIONS)) // TODO: sacar a constantes
             break;
 
         /* prepare new generation in controller[1][x] */
@@ -104,6 +103,13 @@ void gaop_run(const char *filename)
 
 
 /* Static functions */
+
+static void simulate_controller(struct ctrl_inf *c)
+{
+    c->score = simop_simulate(c->kp, c->ki, c->kd);
+    c->evaluated = true;
+}
+
 static bool is_same_controller(struct ctrl_inf *a, struct ctrl_inf *b)
 {
     bool res = false;

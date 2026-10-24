@@ -1,8 +1,11 @@
 #ifndef DC_MOTOR_SIM_H_
 #define DC_MOTOR_SIM_H_
 
+/* Cada cuantos us simulamos el comportamiento del motor */
+#define DCM_SIM_PERIOD_US 100
+
 struct dcmsim_info {
-    float motor_t;
+    float motor_t_s;
 
     float w_ec_w_factor;
     float w_ec_i_factor;
